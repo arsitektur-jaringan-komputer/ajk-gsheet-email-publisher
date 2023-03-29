@@ -6,10 +6,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 class Mailer:
-    def __init__(self, sender_email, receipent_email, password, subject, body, smtp_server="smpt.gmail.com", port=587):
+    def __init__(self, sender_email, password, receipent_email, subject, body, smtp_server="smpt.gmail.com", port=587):
         self.sender_email = sender_email
-        self.receipent_email = receipent_email
         self.password = password
+        self.receipent_email = receipent_email
         self.subject = subject
         self.body = body
         self.smtp_server = smtp_server
