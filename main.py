@@ -1,42 +1,34 @@
-import gspread, os
-from google.oauth2.service_account import Credentials
-from receipent import Recipient
+import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 from mailer import Mailer
 
 
-SERVICE_ACOUNT = ''
-SHEET_NAME = ''
+SERVICE_ACCOUNT_FILE = 'service-account.json'
+SPREADSHEET_ID = os.getenv('AJK_SPREADSHEET_PELATIHAN_DOCKER_ID')
+PASSWORD = os.getenv('AJK_EMAIL_PASSWORD')
 
 if __name__ == "__main__":
-    credentials = Credentials.from_service_account_file(SERVICE_ACOUNT)
-    client = gspread.authorize(credentials)
-
-    sheet = client.open(SHEET_NAME).sheet1
-
-    rows = sheet.get_all_records()
-
-    recipients = {}
-    for row in rows:
-        name = row["Name"]
-        if name:
-            recipient = Recipient(name, row["Email"])
-            recipients[recipient.name].append(recipient.email)
-
-    sender_email = 'xxx@gmail.com'
-    sender_password = os.getenv('EMAIL_PASSWORD')
-    email_subject = 'TULIS SUBJECT DISINI'
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
+        )
     
-    for recipient_name, recipient_email in recipients.items() :
-        body = f"""
-Dear {recipient_name},
-        
-Kami ingin mengucapkan terima kasih kepada Anda atas partisipasi dalam pelatihan Docker yang telah diselenggarakan oleh Lab AJK. Kami berharap bahwa pelatihan ini memberikan manfaat yang besar bagi Anda dan membantu meningkatkan keterampilan Anda dalam menggunakan teknologi Docker.
+    service = build('sheets', 'v4', credentials=creds)
+    result = service.spreadsheets().values().get(
+        spreadsheetId=SPREADSHEET_ID, range='sheet1!A:C'
+        ).execute()
 
-Dalam rangka mengapresiasi partisipasi Anda, kami ingin memberikan sertifikat keikutsertaan dalam pelatihan Docker ini. 
+    header = result['values'][0]
+    column_nickname = header.index('Nickname')
+    column_email = header.index('Email')
+    subject = "Sertifikat Keikutsertaan Pelatihan Docker"
 
-Salam hangat,
-AJK
-"""
+    values = result.get('values', [])
+    for row in values[1:] :
+        recipient_nickname = row[column_nickname]
+        recipient_email = row[column_email]
 
-        mailer = Mailer(sender_email, password, recipient_email, email_subject, body)
+        if not recipient_nickname or not recipient_email :
+            break
+        mailer = Mailer('ajk-if@its.ac.id', PASSWORD, recipient_email, recipient_nickname, subject)
         mailer.send_emails()
