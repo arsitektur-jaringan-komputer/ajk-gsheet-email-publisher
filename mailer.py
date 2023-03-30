@@ -4,14 +4,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 class Mailer:
-    def __init__(self, sender_email, password, subject, smtp_server="smtp.gmail.com", port=587):
+    def __init__(self, sender_email, password, subject, smtp_server='smtp.gmail.com', port=465):
         self.sender_email = sender_email
         self.password = password
         self.subject = subject
         self.smtp_server = smtp_server
         self.port = port
-        self.context = ssl.create_default_context()
-        self.recipients = []
 
     def set_body(self, recipient):
         body = f"""
@@ -27,20 +25,16 @@ AJK
         return body
 
     def send_emails(self, recipients):
-        self.context.check_hostname = False
-        self.context.verify_mode = ssl.CERT_NONE
-        for recipient in recipients:
-            print(recipient["name"])
-            print(recipient["email"])
+        context = ssl.create_default_context()
 
+        for recipient in recipients:
             message = MIMEMultipart()
             message["From"] = self.sender_email
             message["To"] = recipient['email']
             message["Subject"] = self.subject
             message.attach(MIMEText(self.set_body(recipient['name']), "plain"))
 
-            with smtplib.SMTP(self.smtp_server, self.port) as server:
-                server.starttls(context=self.context)
+            with smtplib.SMTP_SSL(self.smtp_server, self.port, context=context) as server:
                 try:
                     server.login(self.sender_email, self.password)
                 except smtplib.SMTPAuthenticationError:

@@ -35,6 +35,5 @@ if __name__ == "__main__":
         recipient = {"name": recipient_nickname, "email": recipient_email}
         recipients.append(recipient)
     
-    print(recipients)
-    mailer = Mailer('ajk-if@its.ac.id', PASSWORD, recipients, subject)
+    mailer = Mailer('kamildeka123@gmail.com', PASSWORD, subject)
     mailer.send_emails(recipients)
