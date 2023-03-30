@@ -4,16 +4,16 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 class Mailer:
-    def __init__(self, sender_email, password, subject, smtp_server='smtp.gmail.com', port=465):
-        self.sender_email = sender_email
+    def __init__(self, main_email, password, sender_email, smtp_server='smtp.office365.com', port=587):
+        self.main_email = main_email
         self.password = password
-        self.subject = subject
+        self.sender_email = sender_email
         self.smtp_server = smtp_server
         self.port = port
+        self.subject = "[TESTING TOOLS] Sertifikat Keikutsertaan Pelatihan Docker"
 
     def set_body(self, recipient):
-        body = f"""
-Dear {recipient},
+        body = f"""Dear {recipient},
                 
 Kami ingin mengucapkan terima kasih kepada Anda atas partisipasi dalam pelatihan Docker yang telah diselenggarakan oleh Lab AJK. Kami berharap bahwa pelatihan ini memberikan manfaat yang besar bagi Anda dan membantu meningkatkan keterampilan Anda dalam menggunakan teknologi Docker.
 
@@ -34,9 +34,10 @@ AJK
             message["Subject"] = self.subject
             message.attach(MIMEText(self.set_body(recipient['name']), "plain"))
 
-            with smtplib.SMTP_SSL(self.smtp_server, self.port, context=context) as server:
+            with smtplib.SMTP(self.smtp_server, self.port) as server:
+                server.starttls(context=context)
                 try:
-                    server.login(self.sender_email, self.password)
+                    server.login(self.main_email, self.password)
                 except smtplib.SMTPAuthenticationError:
                     print("Failed to log in to the SMTP server. Please check your email address and password.")
                 

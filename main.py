@@ -21,8 +21,9 @@ if __name__ == "__main__":
     header = result['values'][0]
     column_nickname = header.index('Nickname')
     column_email = header.index('Email')
-    subject = "Sertifikat Keikutsertaan Pelatihan Docker"
     recipients = []
+
+    print(PASSWORD)
 
     values = result.get('values', [])
     for row in values[1:] :
@@ -35,5 +36,5 @@ if __name__ == "__main__":
         recipient = {"name": recipient_nickname, "email": recipient_email}
         recipients.append(recipient)
     
-    mailer = Mailer('kamildeka123@gmail.com', PASSWORD, subject)
+    mailer = Mailer('deka.19051@mhs.its.ac.id', PASSWORD, 'ajk-if@its.ac.id')
     mailer.send_emails(recipients)
