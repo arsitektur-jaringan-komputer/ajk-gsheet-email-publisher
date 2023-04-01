@@ -6,7 +6,7 @@ from mailer import Mailer
 
 SERVICE_ACCOUNT_FILE = 'service-account.json'
 SPREADSHEET_ID = os.getenv('AJK_SPREADSHEET_PELATIHAN_DOCKER_ID')
-PASSWORD = os.getenv('AJK_EMAIL_PASSWORD')
+PASSWORD = os.getenv('MAIN_EMAIL_PASSWORD')
 
 if __name__ == "__main__":
     creds = service_account.Credentials.from_service_account_file(
@@ -15,25 +15,25 @@ if __name__ == "__main__":
     
     service = build('sheets', 'v4', credentials=creds)
     result = service.spreadsheets().values().get(
-        spreadsheetId=SPREADSHEET_ID, range='sheet1!A:C'
+        spreadsheetId=SPREADSHEET_ID, range='sheet2!A:C'
         ).execute()
 
     header = result['values'][0]
+    column_fullname = header.index('Fullname')
     column_nickname = header.index('Nickname')
     column_email = header.index('Email')
     recipients = []
 
-    print(PASSWORD)
-
     values = result.get('values', [])
     for row in values[1:] :
+        recipient_fullname = row[column_fullname]
         recipient_nickname = row[column_nickname]
         recipient_email = row[column_email]
 
-        if not recipient_nickname or not recipient_email :
+        if not recipient_fullname or not recipient_nickname or not recipient_email :
             continue
 
-        recipient = {"name": recipient_nickname, "email": recipient_email}
+        recipient = {"fullname" : recipient_fullname, "nickname": recipient_nickname, "email": recipient_email}
         recipients.append(recipient)
     
     mailer = Mailer('deka.19051@mhs.its.ac.id', PASSWORD, 'ajk-if@its.ac.id')

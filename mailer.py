@@ -10,20 +10,21 @@ class Mailer:
         self.sender_email = sender_email
         self.smtp_server = smtp_server
         self.port = port
-        self.subject = "[TESTING TOOLS] Sertifikat Keikutsertaan Pelatihan Docker"
+        self.subject = "Pengumuman Hasil Open Recruitment Admin Lab AJK"
+
 
     def set_body(self, recipient):
-        body = f"""Dear {recipient},
+        body = f"""Hi {recipient['fullname']},
                 
-Kami ingin mengucapkan terima kasih kepada Anda atas partisipasi dalam pelatihan Docker yang telah diselenggarakan oleh Lab AJK. Kami berharap bahwa pelatihan ini memberikan manfaat yang besar bagi Anda dan membantu meningkatkan keterampilan Anda dalam menggunakan teknologi Docker.
+Kami ingin memberitahukan bahwa proses Open Recruitment Admin AJK telah selesai dan sayangnya kami harus memberitahu bahwa Anda tidak terpilih sebagai Admin AJK. Kami menghargai waktu dan usaha yang telah Anda berikan selama proses seleksi, dan ingin memberitahu bahwa keputusan ini bersifat mutlak dan hasil pertimbangan dari segala aspek yang telah Anda lakukan selama ini.
 
-Dalam rangka mengapresiasi partisipasi Anda, kami ingin memberikan sertifikat keikutsertaan dalam pelatihan Docker ini. 
+Terima kasih atas partisipasi Anda dalam Open Recruitment Admin AJK, dan sukses untuk masa depan Anda. 
 
 Salam hangat,
 AJK
 """
         return body
-
+    
     def send_emails(self, recipients):
         context = ssl.create_default_context()
 
@@ -32,7 +33,7 @@ AJK
             message["From"] = self.sender_email
             message["To"] = recipient['email']
             message["Subject"] = self.subject
-            message.attach(MIMEText(self.set_body(recipient['name']), "plain"))
+            message.attach(MIMEText(self.set_body(recipient), "plain"))
 
             with smtplib.SMTP(self.smtp_server, self.port) as server:
                 server.starttls(context=context)
@@ -42,4 +43,4 @@ AJK
                     print("Failed to log in to the SMTP server. Please check your email address and password.")
                 
                 server.sendmail(self.sender_email, recipient['email'], message.as_string())
-                print(f"Email sent to {recipient['name']} at {recipient['email']}")
+                print(f"Email sent to {recipient['nickname']} at {recipient['email']}")
