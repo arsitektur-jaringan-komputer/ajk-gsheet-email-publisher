@@ -181,3 +181,6 @@ pyvenv.cfg
 
 # service account
 service-account.json
+
+# png file
+*.png
