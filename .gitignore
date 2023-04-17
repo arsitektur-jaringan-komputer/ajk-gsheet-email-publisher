@@ -184,3 +184,6 @@ service-account.json
 
 # png file
 *.png
+
+# output.txt
+output.txt
