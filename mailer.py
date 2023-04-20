@@ -1,4 +1,5 @@
 import smtplib, ssl, sys
+import concurrent.futures
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
@@ -11,14 +12,18 @@ class Mailer:
         self.sender_email = sender_email
         self.smtp_server = smtp_server
         self.port = port
-        self.subject = "FILL THE EMAIL SUBJECT HERE"
+        self.subject = "[TESTING SCRIPT] Sertifikat Keikutsertaan Docker Mastery Bootcamp: From Zero to Hero"
 
 
     def set_body(self, recipient):
-        body = f"""Hi {recipient['fullname']},
-FILL THE BODY HERE
+        body = f"""<html><body><p>Dear {recipient['fullname']},</p>
+
+<p>Kami ingin mengucapkan terima kasih kepada Anda atas partisipasi dalam kegiatan <b>Docker Mastery Bootcamp: From Zero to Hero</b> yang diselenggarakan oleh Lab Arsitektur dan Jaringan Komputer. Kami berharap bahwa pelatihan ini memberikan manfaat yang besar bagi Anda dan membantu meningkatkan keterampilan Anda dalam menggunakan teknologi Docker. Dalam rangka mengapresiasi partisipasi Anda, kami ingin memberikan sertifikat keikutsertaan dalam kegiatan ini.</p>
+
+Salam hangat,<br>
+AJK</body></html>
 """
-        return body
+        return MIMEText(body, 'html')
 
 
     def generate_certificate(self, recipient):
@@ -31,7 +36,7 @@ FILL THE BODY HERE
         img_width, _ = img.size
         text_width, _ = draw.textsize(text, font)
         x = (img_width - text_width) / 2
-        draw.text((x,315), text, fill="black", font=font)
+        draw.text((x,320), text, fill="black", font=font)
 
         edited_certificate_file = f"output/{recipient['nrp']}_{recipient['fullname']}_certificate.png"
         img.save(edited_certificate_file, "PNG")
@@ -39,31 +44,47 @@ FILL THE BODY HERE
         return edited_certificate_file
 
 
-    def send_emails(self, recipients):
+    def send_email(self, context, recipient):
+        message = MIMEMultipart()
+        message["From"] = self.sender_email
+        message["To"] = recipient['email']
+        message["Subject"] = self.subject
+        message.attach(self.set_body(recipient))
+            
+        certificate_file = self.generate_certificate(recipient)
+        if certificate_file.endswith('.png'):
+            with open(certificate_file, 'rb') as file:
+                img_data = file.read()
+            image = MIMEImage(img_data)
+            image.add_header('Content-Disposition', 'attachment', filename='certificate.png')
+            message.attach(image)
+        else:
+            print(f"Certificate file {certificate_file} has unsupported format. Skipping attachment.")
+
+        with smtplib.SMTP(self.smtp_server, self.port) as server:
+            server.starttls(context=context)
+            try:
+                server.login(self.main_email, self.password)
+            except smtplib.SMTPAuthenticationError:
+                return("Failed to log in to the SMTP server. Please check your email address and password.")
+            
+            server.sendmail(self.sender_email, recipient['email'], message.as_string())
+            return f"Email sent to {recipient['fullname'].upper()} at {recipient['email']}"
+
+
+    def send_email_concurrently(self, recipients):
         context = ssl.create_default_context()
-        with open('output.txt', 'w') as f:
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor, open('output.txt', 'w') as fp:
+            futures = []
             for recipient in recipients:
-                message = MIMEMultipart()
-                message["From"] = self.sender_email
-                message["To"] = recipient['email']
-                message["Subject"] = self.subject
-                message.attach(MIMEText(self.set_body(recipient), "plain"))
+                futures.append(executor.submit(self.send_email, context, recipient))
 
-                with open(self.generate_certificate(recipient), 'rb') as file:
-                    img_data = file.read()
-                image = MIMEImage(img_data)
-                image.add_header('Content-Disposition', 'attachment', filename='certificate.png')
-                message.attach(image)
-
-                with smtplib.SMTP(self.smtp_server, self.port) as server:
-                    server.starttls(context=context)
-                    try:
-                        server.login(self.main_email, self.password)
-                    except smtplib.SMTPAuthenticationError:
-                        print("Failed to log in to the SMTP server. Please check your email address and password.")
-                    
-                    server.sendmail(self.sender_email, recipient['email'], message.as_string())
-                    print(f"Email sent to {recipient['fullname'].upper()} at {recipient['email']}", file=f)
-
-                    f.flush()
-                    sys.stdout.flush()
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result()
+                    fp.write(result + '\n')
+                    fp.flush()
+                except Exception as e:
+                    fp.write(f"An error occurred: {e}\n")
+                    fp.flush()
