@@ -12,7 +12,7 @@ class Mailer:
         self.sender_email = sender_email
         self.smtp_server = smtp_server
         self.port = port
-        self.subject = "[TESTING SCRIPT] Sertifikat Keikutsertaan Docker Mastery Bootcamp: From Zero to Hero"
+        self.subject = "Sertifikat Keikutsertaan Docker Mastery Bootcamp: From Zero to Hero"
 
 
     def set_body(self, recipient):
