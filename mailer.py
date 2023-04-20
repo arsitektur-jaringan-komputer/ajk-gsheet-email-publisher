@@ -1,4 +1,4 @@
-import smtplib, ssl, sys
+import smtplib, ssl
 import concurrent.futures
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -68,14 +68,17 @@ AJK</body></html>
             except smtplib.SMTPAuthenticationError:
                 return("Failed to log in to the SMTP server. Please check your email address and password.")
             
-            server.sendmail(self.sender_email, recipient['email'], message.as_string())
-            return f"Email sent to {recipient['fullname'].upper()} at {recipient['email']}"
+            try:
+                server.sendmail(self.sender_email, recipient['email'], message.as_string())
+                return f"[SUCCEED] Email sent to {recipient['fullname'].upper()} at {recipient['email']}"
+            except smtplib.SMTPRecipientsRefused:
+                return f"[FAILED] Email sent to {recipient['fullname'].upper()} at {recipient['email']}"
 
 
     def send_email_concurrently(self, recipients):
         context = ssl.create_default_context()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor, open('output.txt', 'w') as fp:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor, open('output.txt', 'w') as fp:
             futures = []
             for recipient in recipients:
                 futures.append(executor.submit(self.send_email, context, recipient))
