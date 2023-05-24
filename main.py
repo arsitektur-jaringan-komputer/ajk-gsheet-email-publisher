@@ -6,6 +6,7 @@ from mailer import Mailer
 
 SERVICE_ACCOUNT_FILE = 'service-account.json'
 SPREADSHEET_ID = os.getenv('AJK_SPREADSHEET_PELATIHAN_DOCKER_ID')
+MAIN_EMAIL = os.getenv('MAIN_EMAIL')
 PASSWORD = os.getenv('MAIN_EMAIL_PASSWORD')
 
 if __name__ == "__main__":
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     
     service = build('sheets', 'v4', credentials=creds)
     result = service.spreadsheets().values().get(
-        spreadsheetId=SPREADSHEET_ID, range='sheet1!A:C'
+        spreadsheetId=SPREADSHEET_ID, range='sheet1!A1:C2'
         ).execute()
 
     header = result['values'][0]

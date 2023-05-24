@@ -2,8 +2,13 @@ import smtplib, ssl
 import concurrent.futures
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
 from PIL import Image, ImageDraw, ImageFont
+from PyPDF2 import PdfWriter, PdfReader
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import LEDGER
+
 
 class Mailer:
     def __init__(self, main_email, password, sender_email, smtp_server='smtp.office365.com', port=587):
@@ -26,20 +31,32 @@ AJK</body></html>
         return MIMEText(body, 'html')
 
 
-    def generate_certificate(self, recipient):
-        img = Image.open('template_sertifikat.png')
-        draw = ImageDraw.Draw(img)
+    def generate_certificate_pdf(self, recipient):
+        templated_certificate = f"template_certificate.pdf"
+        edited_certificate_file = f"output/{recipient['nrp']}_{recipient['fullname']}_certificate.pdf"
 
-        font = ImageFont.truetype("Inter-Bold.ttf", 56) 
-        text = f"{recipient['fullname'].upper()}"
+        existing_pdf = PdfReader(open(templated_certificate, "rb"))
+        width = existing_pdf.pages[0].mediabox.width
+        
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=LEDGER)
+        can.setFillColorRGB(0, 0, 0)
+        can.setFont("Times-Roman", 28)
+        can.drawCentredString(width/2, 415, f"{recipient['fullname']}")
+        can.save()
 
-        img_width, _ = img.size
-        text_width, _ = draw.textsize(text, font)
-        x = (img_width - text_width) / 2
-        draw.text((x,320), text, fill="black", font=font)
+        packet.seek(0)
+        new_pdf = PdfReader(packet)
 
-        edited_certificate_file = f"output/{recipient['nrp']}_{recipient['fullname']}_certificate.png"
-        img.save(edited_certificate_file, "PNG")
+        output = PdfWriter()
+
+        page = existing_pdf.pages[0]
+        page.merge_page(new_pdf.pages[0])
+        output.add_page(page)
+
+        outputStream = open(edited_certificate_file, "wb")
+        output.write(outputStream)
+        outputStream.close()
 
         return edited_certificate_file
 
@@ -51,13 +68,12 @@ AJK</body></html>
         message["Subject"] = self.subject
         message.attach(self.set_body(recipient))
             
-        certificate_file = self.generate_certificate(recipient)
-        if certificate_file.endswith('.png'):
-            with open(certificate_file, 'rb') as file:
-                img_data = file.read()
-            image = MIMEImage(img_data)
-            image.add_header('Content-Disposition', 'attachment', filename='certificate.png')
-            message.attach(image)
+        certificate_file = self.generate_certificate_pdf(recipient)
+        if certificate_file.endswith('.pdf'):
+            with open(certificate_file, "rb") as f:
+                attach = MIMEApplication(f.read(),_subtype="pdf")
+            attach.add_header('Content-Disposition','attachment',filename=str(f"Sertifikat_{recipient['nrp']}_{recipient['fullname']}.pdf"))
+            message.attach(attach)
         else:
             print(f"Certificate file {certificate_file} has unsupported format. Skipping attachment.")
 
