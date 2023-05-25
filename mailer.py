@@ -1,11 +1,10 @@
+import io
 import smtplib, ssl
 import concurrent.futures
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
-from PIL import Image, ImageDraw, ImageFont
 from PyPDF2 import PdfWriter, PdfReader
-import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import LEDGER
 
@@ -17,16 +16,12 @@ class Mailer:
         self.sender_email = sender_email
         self.smtp_server = smtp_server
         self.port = port
-        self.subject = "Sertifikat Keikutsertaan Docker Mastery Bootcamp: From Zero to Hero"
+        self.subject = "subject here"
 
 
     def set_body(self, recipient):
-        body = f"""<html><body><p>Dear {recipient['fullname']},</p>
-
-<p>Kami ingin mengucapkan terima kasih kepada Anda atas partisipasi dalam kegiatan <b>Docker Mastery Bootcamp: From Zero to Hero</b> yang diselenggarakan oleh Lab Arsitektur dan Jaringan Komputer. Kami berharap bahwa pelatihan ini memberikan manfaat yang besar bagi Anda dan membantu meningkatkan keterampilan Anda dalam menggunakan teknologi Docker. Dalam rangka mengapresiasi partisipasi Anda, kami ingin memberikan sertifikat keikutsertaan dalam kegiatan ini.</p>
-
-Salam hangat,<br>
-AJK</body></html>
+        body = f"""
+body here (HTML format)
 """
         return MIMEText(body, 'html')
 
@@ -41,8 +36,8 @@ AJK</body></html>
         packet = io.BytesIO()
         can = canvas.Canvas(packet, pagesize=LEDGER)
         can.setFillColorRGB(0, 0, 0)
-        can.setFont("Times-Roman", 28)
-        can.drawCentredString(width/2, 415, f"{recipient['fullname']}")
+        can.setFont("Times-Roman", 32)
+        can.drawCentredString(width/2, 412, f"{recipient['fullname']}")
         can.save()
 
         packet.seek(0)

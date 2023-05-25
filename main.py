@@ -3,11 +3,12 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from mailer import Mailer
 
-
 SERVICE_ACCOUNT_FILE = 'service-account.json'
 SPREADSHEET_ID = os.getenv('AJK_SPREADSHEET_PELATIHAN_DOCKER_ID')
 MAIN_EMAIL = os.getenv('MAIN_EMAIL')
 PASSWORD = os.getenv('MAIN_EMAIL_PASSWORD')
+
+SPREADSHEET_RANGE = ''
 
 if __name__ == "__main__":
     creds = service_account.Credentials.from_service_account_file(
@@ -16,7 +17,7 @@ if __name__ == "__main__":
     
     service = build('sheets', 'v4', credentials=creds)
     result = service.spreadsheets().values().get(
-        spreadsheetId=SPREADSHEET_ID, range='sheet1!A1:C2'
+        spreadsheetId=SPREADSHEET_ID, range=SPREADSHEET_RANGE
         ).execute()
 
     header = result['values'][0]
@@ -37,5 +38,5 @@ if __name__ == "__main__":
         recipient = {"nrp": recipient_nrp, "fullname" : recipient_fullname, "email": recipient_email}
         recipients.append(recipient)
     
-    mailer = Mailer('deka.19051@mhs.its.ac.id', PASSWORD, 'ajk-if@its.ac.id')
+    mailer = Mailer(MAIN_EMAIL, PASSWORD, 'ajk-if@its.ac.id')
     mailer.send_email_concurrently(recipients)

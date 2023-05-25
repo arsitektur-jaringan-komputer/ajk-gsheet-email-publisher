@@ -186,7 +186,7 @@ service-account.json
 *.png
 
 # output.txt
-output.txt
+output*
 template_certificate.pdf
 
 output
